@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tracker de gastos</title>
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Hoy</h1>
+      <p>Total del día: <strong id="total">$ 0</strong></p>
+    </header>
+
+    <form id="expense-form">
+      <label for="amount">Monto</label>
+      <input id="amount" type="text" inputmode="decimal" placeholder="0" required>
+
+      <fieldset>
+        <legend>Categoría</legend>
+        <label><input type="radio" name="category" value="comida" required> Comida</label>
+        <label><input type="radio" name="category" value="transporte"> Transporte</label>
+        <label><input type="radio" name="category" value="super"> Súper</label>
+        <label><input type="radio" name="category" value="servicios"> Servicios</label>
+        <label><input type="radio" name="category" value="salidas"> Salidas</label>
+        <label><input type="radio" name="category" value="delivery"> Delivery</label>
+        <label><input type="radio" name="category" value="salud"> Salud</label>
+        <label><input type="radio" name="category" value="otros"> Otros</label>
+      </fieldset>
+
+      <button type="submit">Guardar gasto</button>
+    </form>
+
+    <section>
+      <h2>Gastos de hoy</h2>
+      <ul id="expense-list"></ul>
+    </section>
+  </main>
+
+  <script src="./js/db.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
