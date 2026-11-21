@@ -1,6 +1,6 @@
 //Service Worker, guardado de archivos en el telefono para que pueda usarse offline
 
-const CACHE = "tracker-v2";
+const CACHE = "tracker-v3";
 
 const FILES = [
   "./",

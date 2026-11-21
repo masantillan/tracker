@@ -8,7 +8,7 @@ const totalEl = document.getElementById("total");
 const noteToggle = document.getElementById("note-toggle");
 const noteBox = document.getElementById("note-box");
 const noteInput = document.getElementById("note");
-const noteHint = document.getElementById("note-hind");
+const noteHint = document.getElementById("note-hint");
 const LAST_PAYMENT_KEY = "lastPayment";
 let noteOpen = false;
 
@@ -102,8 +102,10 @@ function updateNoteVisibility() {
   const open = isOtros || noteOpen || hasText;
 
   noteBox.hidden = !open;
-  noteToggle.hidden = !open;
   noteHint.hidden = !isOtros;
+
+  noteToggle.hidden = isOtros;
+  noteToggle.textContent = open ? "-Quitar nota" : "+Agregar nota";
 }
 
 // ---------- Pantalla ----------
@@ -201,9 +203,16 @@ form.addEventListener("change", (event) => {
 // Cuando toca "+agregar nota"
 
 noteToggle.addEventListener("click", () => {
-  noteOpen = true;
-  updateNoteVisibility();
-  noteInput.focus();
+  const isOpen = !noteBox.hidden;
+  if (isOpen) {
+    noteInput.value = "";
+    noteOpen = false;
+    updateNoteVisibility();
+  } else {
+    noteOpen = true;
+    updateNoteVisibility();
+    noteInput.focus();
+  }
 });
 
 loadLastPayment();
