@@ -31,6 +31,23 @@
         <label><input type="radio" name="category" value="otros"> Otros</label>
       </fieldset>
 
+      <fieldset class="payment">
+        <legend>Medio de Pago</legend>
+        <label><input type="radio" name="payment" value="debito" checked>Debito</label>
+        <label><input type="radio" name="payment" value="efectivo">Efectivo</label>
+        <label><input type="radio" name="payment" value="tarjeta">Tarjeta</label>
+        <label><input type="radio" name="payment" value="billetera">Billetera</label>
+      </fieldset>
+
+      <button type="button" id="note-toggle" class="note-toggle">+ Agregar nota</button>
+      <div id="note-box" class="note-box" hidden>
+        <label class="note-field" for="note">
+          <span>Nota (opcional)</span>
+          <input type="text" id="note" maxlength="120" autocomplete="off">
+        </label>
+        <p id="note-hint">Te ayuda a clasificar después lo que se acumula en Otros</p>
+      </div>
+
       <button type="submit">Guardar gasto</button>
     </form>
 

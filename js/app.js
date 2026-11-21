@@ -5,6 +5,12 @@ const form = document.getElementById("expense-form");
 const amountInput = document.getElementById("amount");
 const listEl = document.getElementById("expense-list");
 const totalEl = document.getElementById("total");
+const noteToggle = document.getElementById("note-toggle");
+const noteBox = document.getElementById("note-box");
+const noteInput = document.getElementById("note");
+const noteHint = document.getElementById("note-hind");
+const LAST_PAYMENT_KEY = "lastPayment";
+let noteOpen = false;
 
 const CATEGORY_LABELS = {
   comida: "Comida",
@@ -22,9 +28,9 @@ const CATEGORY_LABELS = {
 // "3.500" o "3500,50" -> centavos (350000 o 350050). Devuelve null si no es válido.
 function parseAmountToCents(text) {
   const clean = text
-    .replace(/[$\s]/g, "")   // saca el $ y los espacios
-    .replace(/\./g, "")      // saca los puntos de miles
-    .replace(",", ".");      // la coma decimal pasa a punto
+    .replace(/[$\s]/g, "") // saca el $ y los espacios
+    .replace(/\./g, "") // saca los puntos de miles
+    .replace(",", "."); // la coma decimal pasa a punto
   const number = parseFloat(clean);
   if (!Number.isFinite(number) || number <= 0) return null;
   return Math.round(number * 100);
@@ -32,7 +38,9 @@ function parseAmountToCents(text) {
 
 // centavos -> "$ 3.500"
 function formatMoney(cents) {
-  return "$ " + (cents / 100).toLocaleString("es-AR", { maximumFractionDigits: 2 });
+  return (
+    "$ " + (cents / 100).toLocaleString("es-AR", { maximumFractionDigits: 2 })
+  );
 }
 
 // Fecha y hora actuales en formato ISO con la zona horaria local.
@@ -42,9 +50,21 @@ function localISOString(date = new Date()) {
   const sign = offset >= 0 ? "+" : "-";
   const abs = Math.abs(offset);
   return (
-    date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) +
-    "T" + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds()) +
-    sign + pad(Math.floor(abs / 60)) + ":" + pad(abs % 60)
+    date.getFullYear() +
+    "-" +
+    pad(date.getMonth() + 1) +
+    "-" +
+    pad(date.getDate()) +
+    "T" +
+    pad(date.getHours()) +
+    ":" +
+    pad(date.getMinutes()) +
+    ":" +
+    pad(date.getSeconds()) +
+    sign +
+    pad(Math.floor(abs / 60)) +
+    ":" +
+    pad(abs % 60)
   );
 }
 
@@ -52,6 +72,38 @@ function localISOString(date = new Date()) {
 function newId() {
   if (crypto.randomUUID) return crypto.randomUUID();
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
+//Marca el último medio de pago que se usó. Se guarda en el teléfono.
+function loadLastPayment() {
+  try {
+    const saved = localStorage.getItem(LAST_PAYMENT_KEY);
+    if (!saved) return;
+    const radio = form.querySelector(
+      'input[name="payment"][value="' + saved + '"]',
+    );
+    if (radio) radio.checked = true;
+  } catch (error) {
+    //marca el medio de pago por defecto
+  }
+}
+
+function saveLastPayment(value) {
+  try {
+    localStorage.setItem(LAST_PAYMENT_KEY, value);
+  } catch (error) {}
+}
+
+//Si la categoria es otros o tocaste el boton, abre la nota. Caso contrario, se esconde
+
+function updateNoteVisibility() {
+  const isOtros = form.elements["category"].value === "otros";
+  const hasText = noteInput.value.trim() !== "";
+  const open = isOtros || noteOpen || hasText;
+
+  noteBox.hidden = !open;
+  noteToggle.hidden = !open;
+  noteHint.hidden = !isOtros;
 }
 
 // ---------- Pantalla ----------
@@ -73,7 +125,8 @@ async function render() {
       minute: "2-digit",
     });
     const label = CATEGORY_LABELS[expense.category] || expense.category;
-    item.textContent = time + " · " + label + " · " + formatMoney(expense.amount) + " ";
+    item.textContent =
+      time + " · " + label + " · " + formatMoney(expense.amount) + " ";
 
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
@@ -102,7 +155,9 @@ form.addEventListener("submit", async (event) => {
 
   const amount = parseAmountToCents(amountInput.value);
   if (amount === null) {
-    alert("Ingresá un monto válido. Para decimales usá coma (por ejemplo 1250,50).");
+    alert(
+      "Ingresá un monto válido. Para decimales usá coma (por ejemplo 1250,50).",
+    );
     return;
   }
 
@@ -111,11 +166,11 @@ form.addEventListener("submit", async (event) => {
     amount: amount,
     currency: "ARS",
     category: form.elements["category"].value,
-    payment: null,        // todavía no hay selector de medio de pago en esta fase
+    payment: form.elements["payment"].value, // todavía no hay selector de medio de pago en esta fase
     recurring: false,
     installments: 1,
     late: false,
-    note: "",
+    note: noteInput.value.trim(),
     createdAt: localISOString(),
   };
 
@@ -127,10 +182,32 @@ form.addEventListener("submit", async (event) => {
     return; // si falló, no limpiamos el formulario
   }
 
+  saveLastPayment(expense.payment);
+  form.reset();
+  noteOpen = false;
+  loadLastPayment();
+  updateNoteVisibility();
   form.reset();
   amountInput.focus();
   await render();
 });
+
+// Al cambiar categoria, muestra u oculta nota
+
+form.addEventListener("change", (event) => {
+  if (event.target.name === "category") updateNoteVisibility();
+});
+
+// Cuando toca "+agregar nota"
+
+noteToggle.addEventListener("click", () => {
+  noteOpen = true;
+  updateNoteVisibility();
+  noteInput.focus();
+});
+
+loadLastPayment();
+updateNoteVisibility();
 
 // Al abrir la página.
 render().catch((error) => {
